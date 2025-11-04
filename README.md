@@ -3,7 +3,7 @@
 Chat peer-to-peer completamente descentralizado con cifrado de extremo a extremo (E2EE). Sin servidores propios, completamente privado.
 
 ## 🚀 Acceso rápido
-[Abrir chat](https://tu-usuario.github.io/chat-p2p-encrypted/)
+[Abrir chat](https://palmeiroresearch.github.io/PcHAT/)
 
 ---
 
