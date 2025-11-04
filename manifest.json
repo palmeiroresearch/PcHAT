@@ -1,0 +1,26 @@
+{
+  "name": "Chat Seguro P2P - Cifrado E2EE",
+  "short_name": "Chat P2P",
+  "description": "Chat peer-to-peer con cifrado end-to-end. Privado y seguro.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "communication", "security"],
+  "lang": "es-ES"
+}
