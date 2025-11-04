@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'chat-p2p-v1.0.0';
+const CACHE_VERSION = 'chat-p2p-v2.0.0';
 const CACHE_NAME = `chat-seguro-${CACHE_VERSION}`;
 
 const ASSETS = [
