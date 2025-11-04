@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Seguro P2P - Con Historial</title>
+    <title>Chat Seguro P2P - Mejorado</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -127,7 +127,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-            width: 100%;
+            width: calc(100% - 20px);
             margin: 10px;
             font-weight: 600;
         }
@@ -158,6 +158,10 @@
             color: white;
         }
 
+        .contact-item.offline {
+            opacity: 0.6;
+        }
+
         .contact-item.ephemeral {
             border-left: 4px solid #e74c3c;
         }
@@ -168,6 +172,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            justify-content: space-between;
         }
 
         .contact-preview {
@@ -185,6 +190,30 @@
             border-radius: 4px;
             font-size: 10px;
             font-weight: 600;
+        }
+
+        .online-badge {
+            background: #2ecc71;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .reconnect-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .reconnect-btn:hover {
+            background: #2980b9;
         }
 
         .main-content {
@@ -215,7 +244,7 @@
             color: #2c3e50;
         }
 
-        .input-group input {
+        .input-group input, .input-group select {
             width: 100%;
             padding: 12px;
             border: 2px solid #bdc3c7;
@@ -223,18 +252,9 @@
             font-size: 16px;
         }
 
-        .input-group input:focus {
+        .input-group input:focus, .input-group select:focus {
             outline: none;
             border-color: #667eea;
-        }
-
-        .input-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #bdc3c7;
-            border-radius: 8px;
-            font-size: 16px;
-            background: white;
         }
 
         .btn {
@@ -254,6 +274,12 @@
             background: #5a67d8;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-secondary {
@@ -400,6 +426,11 @@
             border-color: #667eea;
         }
 
+        .input-area input:disabled {
+            background: #ecf0f1;
+            cursor: not-allowed;
+        }
+
         .send-btn {
             background: #667eea;
             color: white;
@@ -415,9 +446,14 @@
             transition: all 0.3s ease;
         }
 
-        .send-btn:hover {
+        .send-btn:hover:not(:disabled) {
             background: #5a67d8;
             transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
         }
 
         .encryption-badge {
@@ -447,48 +483,6 @@
             padding: 15px;
             margin-top: 15px;
             font-size: 14px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            margin-bottom: 20px;
-        }
-
-        .modal-header h2 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
         }
 
         .delete-btn {
@@ -529,6 +523,21 @@
                 max-width: 85%;
             }
         }
+
+        .copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+        }
     </style>
 </head>
 <body>
@@ -540,7 +549,6 @@
             </h1>
             <div class="header-buttons">
                 <button class="header-btn" id="toggleSidebarBtn">☰</button>
-                <button class="header-btn hidden" id="settingsBtn">⚙️</button>
             </div>
         </div>
 
@@ -558,12 +566,19 @@
 
             <!-- Contenido principal -->
             <div class="main-content">
-                <!-- Sección de conexión (nueva conversación) -->
+                <!-- Sección de conexión -->
                 <div class="connection-section" id="connectionSection">
                     <h2 style="margin-bottom: 20px; color: #2c3e50;">Nueva conversación</h2>
                     
                     <div class="encryption-badge">
                         🔐 Cifrado End-to-End Activo
+                    </div>
+
+                    <div class="my-id-box">
+                        <strong>Tu ID de conexión:</strong><br>
+                        <span id="myPeerId">Generando...</span>
+                        <button class="copy-btn" id="copyIdBtn">📋 Copiar</button>
+                        <br><small style="color: #856404;">Comparte este ID con tu contacto</small>
                     </div>
 
                     <div class="input-group">
@@ -579,12 +594,6 @@
                         </select>
                     </div>
 
-                    <div class="my-id-box">
-                        <strong>Tu ID de conexión:</strong><br>
-                        <span id="myPeerId">Generando...</span><br>
-                        <small style="color: #856404;">Comparte este ID con tu contacto</small>
-                    </div>
-
                     <div class="input-group">
                         <label for="remotePeerId">ID del destinatario</label>
                         <input type="text" id="remotePeerId" placeholder="Pega aquí el ID de tu contacto">
@@ -593,20 +602,22 @@
                     <button class="btn" id="connectBtn">🚀 Conectar</button>
 
                     <div class="info-box">
-                        <strong>💡 Diferencia entre modos:</strong><br>
+                        <strong>💡 Cómo funciona:</strong><br>
                         <br>
-                        <strong>Persistente:</strong> El historial se guarda cifrado en tu dispositivo. 
-                        Puedes cerrar y volver a ver los mensajes.<br>
+                        <strong>Modo Persistente:</strong> El historial se guarda cifrado en tu dispositivo.
+                        Puedes cerrar y volver a ver los mensajes. Para reconectar con el mismo contacto, 
+                        ambos deben compartir sus nuevos IDs cada sesión.<br>
                         <br>
-                        <strong>Efímera:</strong> No se guarda nada. Al cerrar, desaparece todo. 
+                        <strong>Modo Efímero:</strong> No se guarda nada. Al cerrar, desaparece todo.
                         Máxima privacidad para conversaciones muy sensibles.
                     </div>
 
                     <div class="warning-box">
-                        <strong>⚠️ Importante:</strong><br>
-                        • Ambos usuarios deben estar conectados al mismo tiempo<br>
-                        • El historial solo se guarda en TU dispositivo (no en la nube)<br>
-                        • En modo efímero, al cerrar la pestaña se pierde todo
+                        <strong>⚠️ Importante sobre reconexión:</strong><br>
+                        • Los IDs cambian cada vez que abres la app (por seguridad)<br>
+                        • Para reconectar con un contacto: ambos deben compartir sus nuevos IDs<br>
+                        • El historial se mantiene, pero necesitas el nuevo ID para chatear en vivo<br>
+                        • Esto es por diseño: cada sesión genera nuevas claves criptográficas
                     </div>
                 </div>
 
@@ -622,8 +633,8 @@
                             <div class="chat-header-status" id="chatStatus">Conectando...</div>
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="header-btn" id="clearChatBtn">🗑️</button>
-                            <button class="header-btn" id="closeChatBtn">✕</button>
+                            <button class="header-btn" id="clearChatBtn" title="Eliminar historial">🗑️</button>
+                            <button class="header-btn" id="closeChatBtn" title="Cerrar">✕</button>
                         </div>
                     </div>
                     <div class="messages-area" id="messagesArea">
@@ -632,24 +643,10 @@
                         </div>
                     </div>
                     <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off">
-                        <button class="send-btn" id="sendBtn">➤</button>
+                        <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off" disabled>
+                        <button class="send-btn" id="sendBtn" disabled>➤</button>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de confirmación -->
-    <div class="modal" id="confirmModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Confirmar acción</h2>
-                <p id="modalMessage"></p>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" id="modalCancelBtn">Cancelar</button>
-                <button class="btn delete-btn" id="modalConfirmBtn">Confirmar</button>
             </div>
         </div>
     </div>
@@ -666,7 +663,7 @@
         let remotePublicKey = null;
         let isConnected = false;
         
-        let currentChat = null; // Chat actual abierto
+        let currentChatId = null; // ID único del chat (no el peer ID)
         let chats = {}; // Todos los chats guardados
         let chatMode = 'persistent'; // 'persistent' o 'ephemeral'
 
@@ -678,6 +675,7 @@
         const connectionSection = document.getElementById('connectionSection');
         const chatContainer = document.getElementById('chatContainer');
         const myPeerIdSpan = document.getElementById('myPeerId');
+        const copyIdBtn = document.getElementById('copyIdBtn');
         const remotePeerIdInput = document.getElementById('remotePeerId');
         const contactNameInput = document.getElementById('contactName');
         const chatModeSelect = document.getElementById('chatMode');
@@ -710,65 +708,48 @@
                 const stored = localStorage.getItem('chats');
                 if (stored) {
                     chats = JSON.parse(stored);
-                    console.log('Chats cargados:', Object.keys(chats).length);
+                    console.log('✅ Chats cargados:', Object.keys(chats).length);
                 }
             } catch (error) {
-                console.error('Error al cargar chats:', error);
+                console.error('❌ Error al cargar chats:', error);
             }
         }
 
         function saveChatsToStorage() {
             try {
                 localStorage.setItem('chats', JSON.stringify(chats));
+                console.log('💾 Chats guardados');
             } catch (error) {
-                console.error('Error al guardar chats:', error);
+                console.error('❌ Error al guardar chats:', error);
             }
         }
 
-        function getChatId(peerId) {
-            return `chat_${peerId}`;
+        function generateChatId() {
+            // Generar ID único para el chat (no depende del Peer ID)
+            return 'chat_' + Date.now() + '_' + Math.random().toString(36).substring(7);
         }
 
-        function saveMessage(peerId, message, type) {
-            // Obtener el modo actual - usar el del chat existente si ya existe
-            const chatId = getChatId(peerId);
-            const existingChat = chats[chatId];
-            const currentMode = existingChat ? existingChat.mode : chatMode;
+        function saveMessage(chatId, message, type) {
+            const chat = chats[chatId];
+            if (!chat) {
+                console.warn('⚠️ Chat no encontrado:', chatId);
+                return;
+            }
             
-            if (currentMode === 'ephemeral') {
-                // No guardar en modo efímero
-                console.log('Modo efímero - mensaje no guardado');
+            if (chat.mode === 'ephemeral') {
+                console.log('🔥 Modo efímero - mensaje no guardado');
                 return;
             }
 
-            if (!chats[chatId]) {
-                // Crear nuevo chat
-                const chatName = contactNameInput.value.trim() || peerId.substring(0, 8);
-                chats[chatId] = {
-                    peerId: peerId,
-                    name: chatName,
-                    messages: [],
-                    mode: currentMode,
-                    lastUpdate: new Date().toISOString(),
-                    created: new Date().toISOString()
-                };
-                console.log('✅ Chat creado:', chatName, '- Modo:', currentMode);
-            }
-
-            chats[chatId].messages.push({
+            chat.messages.push({
                 text: message,
                 type: type,
                 timestamp: new Date().toISOString()
             });
 
-            chats[chatId].lastUpdate = new Date().toISOString();
+            chat.lastUpdate = new Date().toISOString();
             saveChatsToStorage();
             renderContactsList();
-        }
-
-        function loadChatMessages(peerId) {
-            const chatId = getChatId(peerId);
-            return chats[chatId] || null;
         }
 
         // ==================== UI - SIDEBAR ====================
@@ -776,20 +757,20 @@
         function renderContactsList() {
             contactsList.innerHTML = '';
             
-            const sortedChats = Object.values(chats).sort((a, b) => 
-                new Date(b.lastUpdate) - new Date(a.lastUpdate)
-            );
+            const sortedChats = Object.entries(chats)
+                .filter(([id, chat]) => chat.mode === 'persistent') // Solo mostrar persistentes
+                .sort(([,a], [,b]) => new Date(b.lastUpdate) - new Date(a.lastUpdate));
 
             if (sortedChats.length === 0) {
-                contactsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d;">No hay conversaciones aún</div>';
+                contactsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d;">No hay conversaciones guardadas</div>';
                 return;
             }
 
-            sortedChats.forEach(chat => {
+            sortedChats.forEach(([chatId, chat]) => {
                 const contactDiv = document.createElement('div');
-                contactDiv.className = 'contact-item';
-                if (chat.mode === 'ephemeral') {
-                    contactDiv.classList.add('ephemeral');
+                contactDiv.className = 'contact-item offline';
+                if (currentChatId === chatId) {
+                    contactDiv.classList.add('active');
                 }
                 
                 const lastMessage = chat.messages[chat.messages.length - 1];
@@ -797,48 +778,55 @@
                 
                 contactDiv.innerHTML = `
                     <div class="contact-name">
-                        ${escapeHtml(chat.name)}
-                        ${chat.mode === 'ephemeral' ? '<span class="ephemeral-badge">🔥 Efímero</span>' : ''}
+                        <span>${escapeHtml(chat.name)}</span>
+                        <span style="font-size: 10px; opacity: 0.7;">Sin conexión</span>
                     </div>
                     <div class="contact-preview">${escapeHtml(preview)}</div>
+                    <button class="reconnect-btn" onclick="event.stopPropagation(); showReconnectInstructions('${chatId}')">
+                        🔄 Reconectar
+                    </button>
                 `;
                 
-                contactDiv.onclick = () => openChat(chat.peerId);
+                contactDiv.onclick = () => openChatHistory(chatId);
                 contactsList.appendChild(contactDiv);
             });
         }
 
-        function openChat(peerId) {
-            const chat = loadChatMessages(peerId);
+        function openChatHistory(chatId) {
+            const chat = chats[chatId];
             if (!chat) return;
 
-            currentChat = peerId;
+            currentChatId = chatId;
             chatMode = chat.mode;
             
             // Actualizar UI
             connectionSection.classList.add('hidden');
             chatContainer.classList.remove('hidden');
             chatContactName.textContent = chat.name;
-            chatEncryptionBadge.classList.remove('hidden');
+            chatEncryptionBadge.classList.add('hidden');
+            chatEphemeralBadge.classList.add('hidden');
             
-            if (chat.mode === 'ephemeral') {
-                chatEphemeralBadge.classList.remove('hidden');
-            } else {
-                chatEphemeralBadge.classList.add('hidden');
-            }
-
             // Cargar mensajes
-            messagesArea.innerHTML = '<div class="system-message">🔐 Conversación cifrada de extremo a extremo</div>';
+            messagesArea.innerHTML = '<div class="system-message">📂 Historial cargado - Sin conexión activa</div>';
             chat.messages.forEach(msg => {
                 addMessageToUI(msg.text, msg.type, msg.timestamp);
             });
 
-            chatStatus.textContent = 'Historial cargado - Sin conexión activa';
+            chatStatus.textContent = '⚪ Desconectado - Solo lectura';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            
+            renderContactsList();
             
             // Si estamos en móvil, cerrar sidebar
             if (window.innerWidth <= 768) {
                 sidebar.classList.add('collapsed');
             }
+        }
+
+        function showReconnectInstructions(chatId) {
+            const chat = chats[chatId];
+            alert(`Para reconectar con ${chat.name}:\n\n1. Copia tu ID actual: ${peer.id}\n2. Compártelo con ${chat.name}\n3. ${chat.name} debe compartirte su nuevo ID\n4. Ve a "Nueva conversación"\n5. Pega el nuevo ID de ${chat.name}\n6. El historial se mantendrá automáticamente`);
         }
 
         // ==================== CRIPTOGRAFÍA ====================
@@ -857,7 +845,7 @@
                 );
                 console.log('✅ Claves criptográficas generadas');
             } catch (error) {
-                console.error('Error al generar claves:', error);
+                console.error('❌ Error al generar claves:', error);
                 alert('Error al inicializar el cifrado. Recarga la página.');
             }
         }
@@ -931,34 +919,16 @@
 
             peer.on('open', (id) => {
                 myPeerIdSpan.textContent = id;
-                console.log('Mi Peer ID:', id);
+                console.log('🆔 Mi Peer ID:', id);
             });
 
             peer.on('error', (error) => {
-                console.error('Error de PeerJS:', error);
+                console.error('❌ Error de PeerJS:', error);
                 addSystemMessage('❌ Error de conexión: ' + error.type);
             });
 
             peer.on('connection', (incomingConn) => {
-                console.log('📞 Conexión entrante recibida de:', incomingConn.peer);
-                
-                // Si ya hay una conexión activa, cerrarla
-                if (conn && isConnected) {
-                    console.log('⚠️ Ya hay una conexión activa, cerrando la anterior');
-                    conn.close();
-                }
-                
-                // Revisar si existe un chat previo con este peer
-                const existingChat = loadChatMessages(incomingConn.peer);
-                if (existingChat) {
-                    chatMode = existingChat.mode;
-                    console.log('📂 Chat existente encontrado, modo:', chatMode);
-                } else {
-                    // Por defecto usar persistente para conexiones entrantes
-                    chatMode = 'persistent';
-                    console.log('✨ Nuevo chat, modo por defecto: persistent');
-                }
-                
+                console.log('📞 Conexión entrante de:', incomingConn.peer);
                 handleConnection(incomingConn);
             });
         }
@@ -976,28 +946,69 @@
                 return;
             }
 
-            // Guardar el modo de chat seleccionado
             chatMode = chatModeSelect.value;
-            console.log('🔄 Conectando en modo:', chatMode);
+            const contactName = contactNameInput.value.trim() || remotePeerId.substring(0, 8);
             
-            // Mostrar mensaje en área de chat
+            // Buscar si ya existe un chat con este nombre
+            const existingChatEntry = Object.entries(chats).find(([id, chat]) => 
+                chat.name === contactName && chat.mode === 'persistent'
+            );
+            
+            if (existingChatEntry) {
+                // Usar el chat existente
+                currentChatId = existingChatEntry[0];
+                console.log('📂 Usando chat existente:', contactName);
+            } else if (chatMode === 'persistent') {
+                // Crear nuevo chat persistente
+                currentChatId = generateChatId();
+                chats[currentChatId] = {
+                    id: currentChatId,
+                    name: contactName,
+                    messages: [],
+                    mode: chatMode,
+                    created: new Date().toISOString(),
+                    lastUpdate: new Date().toISOString()
+                };
+                saveChatsToStorage();
+                console.log('✨ Nuevo chat creado:', contactName, '- ID:', currentChatId);
+            } else {
+                // Chat efímero - no guardar
+                currentChatId = 'ephemeral_' + Date.now();
+                console.log('🔥 Chat efímero - no se guardará');
+            }
+            
+            // Mostrar chat
             connectionSection.classList.add('hidden');
             chatContainer.classList.remove('hidden');
             messagesArea.innerHTML = '<div class="system-message">🔄 Conectando...</div>';
-            chatContactName.textContent = contactNameInput.value.trim() || remotePeerId.substring(0, 8);
+            chatContactName.textContent = contactName;
             chatStatus.textContent = 'Conectando...';
+            
+            if (chatMode === 'ephemeral') {
+                chatEphemeralBadge.classList.remove('hidden');
+            }
+            
+            // Cargar historial si existe
+            if (chatMode === 'persistent' && chats[currentChatId].messages.length > 0) {
+                messagesArea.innerHTML = '<div class="system-message">📂 Cargando historial...</div>';
+                chats[currentChatId].messages.forEach(msg => {
+                    addMessageToUI(msg.text, msg.type, msg.timestamp);
+                });
+                addSystemMessage('🔄 Conectando...');
+            }
             
             // Iniciar conexión
             conn = peer.connect(remotePeerId, { reliable: true });
             handleConnection(conn);
+            
+            renderContactsList();
         }
 
         function handleConnection(connection) {
             conn = connection;
-            currentChat = conn.peer;
 
             conn.on('open', async () => {
-                console.log('✅ Conexión P2P establecida con:', conn.peer);
+                console.log('✅ Conexión P2P establecida');
                 
                 const myPublicKey = await exportPublicKey();
                 conn.send({
@@ -1012,7 +1023,7 @@
             conn.on('data', async (data) => {
                 if (data.type === 'public-key') {
                     remotePublicKey = await importPublicKey(data.key);
-                    console.log('🔑 Clave pública del destinatario recibida');
+                    console.log('🔑 Clave pública recibida');
                     
                     if (!isConnected) {
                         isConnected = true;
@@ -1020,57 +1031,16 @@
                         chatStatus.textContent = '🔐 Cifrado E2EE activo';
                         chatEncryptionBadge.classList.remove('hidden');
                         
-                        // Mostrar chat
-                        connectionSection.classList.add('hidden');
-                        chatContainer.classList.remove('hidden');
-                        
-                        const name = contactNameInput.value.trim() || conn.peer.substring(0, 8);
-                        chatContactName.textContent = name;
-                        
-                        if (chatMode === 'ephemeral') {
-                            chatEphemeralBadge.classList.remove('hidden');
-                        }
-                        
-                        // Cargar historial si existe y es modo persistente
-                        const existingChat = loadChatMessages(conn.peer);
-                        if (existingChat && existingChat.mode === 'persistent') {
-                            console.log('📂 Cargando historial existente...');
-                            existingChat.messages.forEach(msg => {
-                                if (msg.type !== 'system') {
-                                    addMessageToUI(msg.text, msg.type, msg.timestamp);
-                                }
-                            });
-                        } else if (!existingChat && chatMode === 'persistent') {
-                            // Crear el chat inmediatamente si es persistente
-                            const chatId = getChatId(conn.peer);
-                            chats[chatId] = {
-                                peerId: conn.peer,
-                                name: name,
-                                messages: [],
-                                mode: chatMode,
-                                lastUpdate: new Date().toISOString(),
-                                created: new Date().toISOString()
-                            };
-                            saveChatsToStorage();
-                            renderContactsList();
-                            console.log('✅ Chat persistente creado:', name);
-                        }
+                        // Habilitar entrada de mensajes
+                        messageInput.disabled = false;
+                        sendBtn.disabled = false;
+                        messageInput.focus();
                         
                         addSystemMessage('🔐 Cifrado E2EE establecido. Conversación segura.');
-                        messageInput.focus();
                         
                         // Si móvil, cerrar sidebar
                         if (window.innerWidth <= 768) {
                             sidebar.classList.add('collapsed');
-                        }
-                        
-                        // Solo enviar clave pública si fuimos nosotros quienes iniciamos
-                        if (conn.peer === remotePeerIdInput.value.trim()) {
-                            const myPublicKey = await exportPublicKey();
-                            conn.send({
-                                type: 'public-key',
-                                key: myPublicKey
-                            });
                         }
                     }
                 } else if (data.type === 'encrypted-message') {
@@ -1078,23 +1048,26 @@
                         const decrypted = await decryptMessage(data.message);
                         addMessage(decrypted, 'received');
                     } catch (error) {
-                        console.error('Error al descifrar mensaje:', error);
+                        console.error('❌ Error al descifrar:', error);
                         addSystemMessage('❌ Error al descifrar mensaje');
                     }
                 }
             });
 
             conn.on('close', () => {
-                console.log('❌ Conexión cerrada');
+                console.log('🔌 Conexión cerrada');
                 addSystemMessage('🔌 Conexión finalizada');
                 isConnected = false;
                 remotePublicKey = null;
                 statusIndicator.classList.remove('connected', 'encrypted');
-                chatStatus.textContent = 'Desconectado';
+                chatStatus.textContent = '⚪ Desconectado';
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                renderContactsList();
             });
 
             conn.on('error', (error) => {
-                console.error('Error de conexión:', error);
+                console.error('❌ Error de conexión:', error);
                 addSystemMessage('❌ Error: ' + error);
             });
         }
@@ -1119,7 +1092,7 @@
                 addMessage(message, 'sent');
                 messageInput.value = '';
             } catch (error) {
-                console.error('Error al enviar mensaje:', error);
+                console.error('❌ Error al enviar:', error);
                 addSystemMessage('❌ Error al enviar mensaje');
             }
         }
@@ -1130,8 +1103,8 @@
             const timestamp = new Date().toISOString();
             addMessageToUI(text, type, timestamp);
             
-            if (currentChat) {
-                saveMessage(currentChat, text, type);
+            if (currentChatId && chats[currentChatId]) {
+                saveMessage(currentChatId, text, type);
             }
         }
 
@@ -1176,31 +1149,36 @@
             sendBtn.addEventListener('click', sendMessage);
             
             messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !messageInput.disabled) {
                     sendMessage();
                 }
             });
 
+            copyIdBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(peer.id).then(() => {
+                    copyIdBtn.textContent = '✅ Copiado';
+                    setTimeout(() => {
+                        copyIdBtn.textContent = '📋 Copiar';
+                    }, 2000);
+                });
+            });
+
             newChatBtn.addEventListener('click', () => {
-                // Cerrar conexión actual si existe
                 if (conn && isConnected) {
                     conn.close();
                 }
                 
-                // Limpiar estado
                 connectionSection.classList.remove('hidden');
                 chatContainer.classList.add('hidden');
-                currentChat = null;
+                currentChatId = null;
                 isConnected = false;
                 remotePublicKey = null;
-                chatMode = 'persistent'; // Reset a modo por defecto
+                chatMode = 'persistent';
                 
-                // Limpiar inputs
                 remotePeerIdInput.value = '';
                 contactNameInput.value = '';
                 chatModeSelect.value = 'persistent';
                 
-                // Limpiar indicadores
                 statusIndicator.classList.remove('connected', 'encrypted');
                 
                 console.log('✨ Preparando nueva conversación');
@@ -1210,23 +1188,23 @@
                 if (conn && isConnected) {
                     conn.close();
                 }
-                currentChat = null;
+                currentChatId = null;
                 isConnected = false;
                 remotePublicKey = null;
                 chatContainer.classList.add('hidden');
                 connectionSection.classList.remove('hidden');
                 statusIndicator.classList.remove('connected', 'encrypted');
+                renderContactsList();
             });
 
             clearChatBtn.addEventListener('click', () => {
-                if (!currentChat) return;
+                if (!currentChatId || !chats[currentChatId]) return;
                 
-                if (confirm('¿Eliminar todo el historial de esta conversación?')) {
-                    const chatId = getChatId(currentChat);
-                    delete chats[chatId];
+                if (confirm(`¿Eliminar todo el historial de ${chats[currentChatId].name}?`)) {
+                    delete chats[currentChatId];
                     saveChatsToStorage();
                     renderContactsList();
-                    messagesArea.innerHTML = '<div class="system-message">🔐 Historial eliminado</div>';
+                    messagesArea.innerHTML = '<div class="system-message">🗑️ Historial eliminado</div>';
                 }
             });
 
@@ -1239,8 +1217,8 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registrado'))
-                    .catch(err => console.log('Error al registrar SW:', err));
+                    .then(reg => console.log('✅ Service Worker registrado'))
+                    .catch(err => console.log('❌ Error SW:', err));
             });
         }
     </script>
