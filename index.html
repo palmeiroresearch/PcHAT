@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Seguro P2P</title>
+    <title>Chat Seguro P2P - Con Historial</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -38,29 +38,29 @@
         .header {
             background: #2c3e50;
             color: white;
-            padding: 20px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .header h1 {
-            font-size: 20px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .status-indicator {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: #95a5a6;
-            animation: pulse 2s infinite;
         }
 
         .status-indicator.connected {
             background: #2ecc71;
+            animation: pulse 2s infinite;
         }
 
         .status-indicator.encrypted {
@@ -72,10 +72,132 @@
             50% { opacity: 0.5; }
         }
 
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #ecf0f1;
+            border-right: 1px solid #bdc3c7;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            background: #34495e;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h3 {
+            font-size: 16px;
+        }
+
+        .new-chat-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin: 10px;
+            font-weight: 600;
+        }
+
+        .new-chat-btn:hover {
+            background: #2980b9;
+        }
+
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            padding: 15px;
+            border-bottom: 1px solid #bdc3c7;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .contact-item:hover {
+            background: #d5dbdb;
+        }
+
+        .contact-item.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .contact-item.ephemeral {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .contact-preview {
+            font-size: 13px;
+            opacity: 0.7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ephemeral-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
         .connection-section {
             padding: 30px;
             background: #ecf0f1;
-            border-bottom: 1px solid #bdc3c7;
+            flex: 1;
+            overflow-y: auto;
         }
 
         .connection-section.hidden {
@@ -104,6 +226,15 @@
         .input-group input:focus {
             outline: none;
             border-color: #667eea;
+        }
+
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
         }
 
         .btn {
@@ -155,6 +286,33 @@
 
         .chat-container.hidden {
             display: none;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #bdc3c7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header-info {
+            flex: 1;
+        }
+
+        .chat-header-name {
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-header-status {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 2px;
         }
 
         .messages-area {
@@ -265,12 +423,12 @@
         .encryption-badge {
             background: #3498db;
             color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
 
         .info-box {
@@ -291,23 +449,80 @@
             font-size: 14px;
         }
 
-        .disconnect-btn {
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .delete-btn {
             background: #e74c3c;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 12px;
             border-radius: 6px;
-            font-size: 14px;
             cursor: pointer;
+            font-size: 13px;
         }
 
-        .disconnect-btn:hover {
+        .delete-btn:hover {
             background: #c0392b;
         }
 
+        .layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
         @media (max-width: 768px) {
-            .container {
-                height: 100vh;
+            .sidebar {
+                position: absolute;
+                left: 0;
+                top: 54px;
+                bottom: 0;
+                z-index: 100;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+
+            .sidebar.collapsed {
+                left: -280px;
             }
 
             .message-bubble {
@@ -323,57 +538,118 @@
                 <span class="status-indicator" id="statusIndicator"></span>
                 🔒 Chat Seguro P2P
             </h1>
-            <button class="disconnect-btn hidden" id="disconnectBtn">Desconectar</button>
-        </div>
-
-        <!-- Sección de conexión -->
-        <div class="connection-section" id="connectionSection">
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">Iniciar conversación</h2>
-            
-            <div class="encryption-badge">
-                🔐 Cifrado End-to-End Activo
-            </div>
-
-            <div class="info-box">
-                <strong>🛡️ Tu privacidad está protegida:</strong><br>
-                • Las claves se generan localmente en tu dispositivo<br>
-                • Los mensajes se cifran antes de enviarlos<br>
-                • Nadie más puede leer tus conversaciones<br>
-                • Las claves privadas NUNCA salen de tu dispositivo
-            </div>
-
-            <div class="my-id-box">
-                <strong>Tu ID de conexión:</strong><br>
-                <span id="myPeerId">Generando...</span><br>
-                <small style="color: #856404;">Comparte este ID con la persona con quien quieres chatear</small>
-            </div>
-
-            <div class="input-group">
-                <label for="remotePeerId">ID del destinatario</label>
-                <input type="text" id="remotePeerId" placeholder="Pega aquí el ID de tu contacto">
-            </div>
-
-            <button class="btn" id="connectBtn">🚀 Conectar</button>
-
-            <div class="warning-box">
-                <strong>⚠️ Importante:</strong><br>
-                • Ambos usuarios deben estar conectados al mismo tiempo<br>
-                • El historial solo se guarda localmente en tu dispositivo<br>
-                • Al cerrar la ventana, se pierde la conexión
+            <div class="header-buttons">
+                <button class="header-btn" id="toggleSidebarBtn">☰</button>
+                <button class="header-btn hidden" id="settingsBtn">⚙️</button>
             </div>
         </div>
 
-        <!-- Sección de chat -->
-        <div class="chat-container hidden" id="chatContainer">
-            <div class="messages-area" id="messagesArea">
-                <div class="system-message">
-                    🔐 Conversación cifrada de extremo a extremo
+        <div class="layout">
+            <!-- Sidebar de contactos -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h3>Conversaciones</h3>
+                </div>
+                <button class="new-chat-btn" id="newChatBtn">+ Nueva Conversación</button>
+                <div class="contacts-list" id="contactsList">
+                    <!-- Los contactos se agregarán dinámicamente -->
                 </div>
             </div>
 
-            <div class="input-area">
-                <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off">
-                <button class="send-btn" id="sendBtn">➤</button>
+            <!-- Contenido principal -->
+            <div class="main-content">
+                <!-- Sección de conexión (nueva conversación) -->
+                <div class="connection-section" id="connectionSection">
+                    <h2 style="margin-bottom: 20px; color: #2c3e50;">Nueva conversación</h2>
+                    
+                    <div class="encryption-badge">
+                        🔐 Cifrado End-to-End Activo
+                    </div>
+
+                    <div class="input-group">
+                        <label for="contactName">Nombre del contacto (opcional)</label>
+                        <input type="text" id="contactName" placeholder="Ej: Dr. García">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="chatMode">Modo de conversación</label>
+                        <select id="chatMode">
+                            <option value="persistent">💾 Persistente - Se guarda el historial cifrado</option>
+                            <option value="ephemeral">🔥 Efímera - Sin historial (máxima privacidad)</option>
+                        </select>
+                    </div>
+
+                    <div class="my-id-box">
+                        <strong>Tu ID de conexión:</strong><br>
+                        <span id="myPeerId">Generando...</span><br>
+                        <small style="color: #856404;">Comparte este ID con tu contacto</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="remotePeerId">ID del destinatario</label>
+                        <input type="text" id="remotePeerId" placeholder="Pega aquí el ID de tu contacto">
+                    </div>
+
+                    <button class="btn" id="connectBtn">🚀 Conectar</button>
+
+                    <div class="info-box">
+                        <strong>💡 Diferencia entre modos:</strong><br>
+                        <br>
+                        <strong>Persistente:</strong> El historial se guarda cifrado en tu dispositivo. 
+                        Puedes cerrar y volver a ver los mensajes.<br>
+                        <br>
+                        <strong>Efímera:</strong> No se guarda nada. Al cerrar, desaparece todo. 
+                        Máxima privacidad para conversaciones muy sensibles.
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>⚠️ Importante:</strong><br>
+                        • Ambos usuarios deben estar conectados al mismo tiempo<br>
+                        • El historial solo se guarda en TU dispositivo (no en la nube)<br>
+                        • En modo efímero, al cerrar la pestaña se pierde todo
+                    </div>
+                </div>
+
+                <!-- Sección de chat -->
+                <div class="chat-container hidden" id="chatContainer">
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <div class="chat-header-name">
+                                <span id="chatContactName">Contacto</span>
+                                <span class="encryption-badge hidden" id="chatEncryptionBadge">🔐 E2EE</span>
+                                <span class="ephemeral-badge hidden" id="chatEphemeralBadge">🔥 Efímero</span>
+                            </div>
+                            <div class="chat-header-status" id="chatStatus">Conectando...</div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="header-btn" id="clearChatBtn">🗑️</button>
+                            <button class="header-btn" id="closeChatBtn">✕</button>
+                        </div>
+                    </div>
+                    <div class="messages-area" id="messagesArea">
+                        <div class="system-message">
+                            🔐 Conversación cifrada de extremo a extremo
+                        </div>
+                    </div>
+                    <div class="input-area">
+                        <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off">
+                        <button class="send-btn" id="sendBtn">➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Confirmar acción</h2>
+                <p id="modalMessage"></p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="modalCancelBtn">Cancelar</button>
+                <button class="btn delete-btn" id="modalConfirmBtn">Confirmar</button>
             </div>
         </div>
     </div>
@@ -382,37 +658,184 @@
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <script>
-        // Variables globales
+        // ==================== CONFIGURACIÓN Y VARIABLES ====================
+        
         let peer = null;
         let conn = null;
-        let myKeys = null; // Par de claves propias
-        let remotePublicKey = null; // Clave pública del destinatario
+        let myKeys = null;
+        let remotePublicKey = null;
         let isConnected = false;
+        
+        let currentChat = null; // Chat actual abierto
+        let chats = {}; // Todos los chats guardados
+        let chatMode = 'persistent'; // 'persistent' o 'ephemeral'
 
         // Elementos del DOM
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+        const contactsList = document.getElementById('contactsList');
+        const newChatBtn = document.getElementById('newChatBtn');
         const connectionSection = document.getElementById('connectionSection');
         const chatContainer = document.getElementById('chatContainer');
         const myPeerIdSpan = document.getElementById('myPeerId');
         const remotePeerIdInput = document.getElementById('remotePeerId');
+        const contactNameInput = document.getElementById('contactName');
+        const chatModeSelect = document.getElementById('chatMode');
         const connectBtn = document.getElementById('connectBtn');
-        const disconnectBtn = document.getElementById('disconnectBtn');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const messagesArea = document.getElementById('messagesArea');
         const statusIndicator = document.getElementById('statusIndicator');
+        const chatContactName = document.getElementById('chatContactName');
+        const chatStatus = document.getElementById('chatStatus');
+        const chatEncryptionBadge = document.getElementById('chatEncryptionBadge');
+        const chatEphemeralBadge = document.getElementById('chatEphemeralBadge');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const closeChatBtn = document.getElementById('closeChatBtn');
 
-        // Inicializar
+        // ==================== INICIALIZACIÓN ====================
+
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeCrypto();
             initializePeer();
             setupEventListeners();
+            loadChatsFromStorage();
+            renderContactsList();
         });
+
+        // ==================== ALMACENAMIENTO LOCAL ====================
+
+        function loadChatsFromStorage() {
+            try {
+                const stored = localStorage.getItem('chats');
+                if (stored) {
+                    chats = JSON.parse(stored);
+                    console.log('Chats cargados:', Object.keys(chats).length);
+                }
+            } catch (error) {
+                console.error('Error al cargar chats:', error);
+            }
+        }
+
+        function saveChatsToStorage() {
+            try {
+                localStorage.setItem('chats', JSON.stringify(chats));
+            } catch (error) {
+                console.error('Error al guardar chats:', error);
+            }
+        }
+
+        function getChatId(peerId) {
+            return `chat_${peerId}`;
+        }
+
+        function saveMessage(peerId, message, type) {
+            if (chatMode === 'ephemeral') {
+                // No guardar en modo efímero
+                return;
+            }
+
+            const chatId = getChatId(peerId);
+            if (!chats[chatId]) {
+                chats[chatId] = {
+                    peerId: peerId,
+                    name: contactNameInput.value || peerId.substring(0, 8),
+                    messages: [],
+                    mode: chatMode,
+                    lastUpdate: new Date().toISOString()
+                };
+            }
+
+            chats[chatId].messages.push({
+                text: message,
+                type: type,
+                timestamp: new Date().toISOString()
+            });
+
+            chats[chatId].lastUpdate = new Date().toISOString();
+            saveChatsToStorage();
+            renderContactsList();
+        }
+
+        function loadChatMessages(peerId) {
+            const chatId = getChatId(peerId);
+            return chats[chatId] || null;
+        }
+
+        // ==================== UI - SIDEBAR ====================
+
+        function renderContactsList() {
+            contactsList.innerHTML = '';
+            
+            const sortedChats = Object.values(chats).sort((a, b) => 
+                new Date(b.lastUpdate) - new Date(a.lastUpdate)
+            );
+
+            if (sortedChats.length === 0) {
+                contactsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d;">No hay conversaciones aún</div>';
+                return;
+            }
+
+            sortedChats.forEach(chat => {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'contact-item';
+                if (chat.mode === 'ephemeral') {
+                    contactDiv.classList.add('ephemeral');
+                }
+                
+                const lastMessage = chat.messages[chat.messages.length - 1];
+                const preview = lastMessage ? lastMessage.text.substring(0, 30) + '...' : 'Sin mensajes';
+                
+                contactDiv.innerHTML = `
+                    <div class="contact-name">
+                        ${escapeHtml(chat.name)}
+                        ${chat.mode === 'ephemeral' ? '<span class="ephemeral-badge">🔥 Efímero</span>' : ''}
+                    </div>
+                    <div class="contact-preview">${escapeHtml(preview)}</div>
+                `;
+                
+                contactDiv.onclick = () => openChat(chat.peerId);
+                contactsList.appendChild(contactDiv);
+            });
+        }
+
+        function openChat(peerId) {
+            const chat = loadChatMessages(peerId);
+            if (!chat) return;
+
+            currentChat = peerId;
+            chatMode = chat.mode;
+            
+            // Actualizar UI
+            connectionSection.classList.add('hidden');
+            chatContainer.classList.remove('hidden');
+            chatContactName.textContent = chat.name;
+            chatEncryptionBadge.classList.remove('hidden');
+            
+            if (chat.mode === 'ephemeral') {
+                chatEphemeralBadge.classList.remove('hidden');
+            } else {
+                chatEphemeralBadge.classList.add('hidden');
+            }
+
+            // Cargar mensajes
+            messagesArea.innerHTML = '<div class="system-message">🔐 Conversación cifrada de extremo a extremo</div>';
+            chat.messages.forEach(msg => {
+                addMessageToUI(msg.text, msg.type, msg.timestamp);
+            });
+
+            chatStatus.textContent = 'Historial cargado - Sin conexión activa';
+            
+            // Si estamos en móvil, cerrar sidebar
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+            }
+        }
 
         // ==================== CRIPTOGRAFÍA ====================
 
         async function initializeCrypto() {
             try {
-                // Generar par de claves RSA-OAEP
                 myKeys = await crypto.subtle.generateKey(
                     {
                         name: "RSA-OAEP",
@@ -423,7 +846,7 @@
                     true,
                     ["encrypt", "decrypt"]
                 );
-                console.log('✅ Claves criptográficas generadas localmente');
+                console.log('✅ Claves criptográficas generadas');
             } catch (error) {
                 console.error('Error al generar claves:', error);
                 alert('Error al inicializar el cifrado. Recarga la página.');
@@ -471,7 +894,6 @@
             return decoder.decode(decrypted);
         }
 
-        // Utilidades de conversión
         function arrayBufferToBase64(buffer) {
             const binary = String.fromCharCode(...new Uint8Array(buffer));
             return btoa(binary);
@@ -489,7 +911,6 @@
         // ==================== PEER.JS ====================
 
         function initializePeer() {
-            // Usar el servidor público de PeerJS
             peer = new Peer({
                 config: {
                     iceServers: [
@@ -509,7 +930,6 @@
                 addSystemMessage('❌ Error de conexión: ' + error.type);
             });
 
-            // Escuchar conexiones entrantes
             peer.on('connection', (incomingConn) => {
                 console.log('📞 Conexión entrante recibida');
                 handleConnection(incomingConn);
@@ -529,6 +949,7 @@
                 return;
             }
 
+            chatMode = chatModeSelect.value;
             addSystemMessage('🔄 Conectando...');
             conn = peer.connect(remotePeerId, { reliable: true });
             handleConnection(conn);
@@ -536,32 +957,57 @@
 
         function handleConnection(connection) {
             conn = connection;
+            currentChat = conn.peer;
 
             conn.on('open', async () => {
                 console.log('✅ Conexión P2P establecida');
                 
-                // Intercambiar claves públicas
                 const myPublicKey = await exportPublicKey();
                 conn.send({
                     type: 'public-key',
                     key: myPublicKey
                 });
 
-                updateUI('connected');
+                statusIndicator.classList.add('connected');
+                chatStatus.textContent = 'Conectado - Estableciendo cifrado...';
             });
 
             conn.on('data', async (data) => {
                 if (data.type === 'public-key') {
-                    // Recibir clave pública del otro peer
                     remotePublicKey = await importPublicKey(data.key);
                     console.log('🔑 Clave pública del destinatario recibida');
                     
                     if (!isConnected) {
                         isConnected = true;
-                        updateUI('encrypted');
+                        statusIndicator.classList.add('encrypted');
+                        chatStatus.textContent = '🔐 Cifrado E2EE activo';
+                        chatEncryptionBadge.classList.remove('hidden');
+                        
                         addSystemMessage('🔐 Cifrado E2EE establecido. Conversación segura.');
                         
-                        // Si somos nosotros quienes iniciamos la conexión, también enviamos nuestra clave
+                        // Mostrar chat
+                        connectionSection.classList.add('hidden');
+                        chatContainer.classList.remove('hidden');
+                        
+                        const name = contactNameInput.value || conn.peer.substring(0, 8);
+                        chatContactName.textContent = name;
+                        
+                        if (chatMode === 'ephemeral') {
+                            chatEphemeralBadge.classList.remove('hidden');
+                        }
+                        
+                        // Cargar historial si existe
+                        const existingChat = loadChatMessages(conn.peer);
+                        if (existingChat && chatMode === 'persistent') {
+                            existingChat.messages.forEach(msg => {
+                                if (msg.type !== 'system') {
+                                    addMessageToUI(msg.text, msg.type, msg.timestamp);
+                                }
+                            });
+                        }
+
+                        messageInput.focus();
+                        
                         if (conn.peer === remotePeerIdInput.value.trim()) {
                             const myPublicKey = await exportPublicKey();
                             conn.send({
@@ -571,7 +1017,6 @@
                         }
                     }
                 } else if (data.type === 'encrypted-message') {
-                    // Mensaje cifrado recibido
                     try {
                         const decrypted = await decryptMessage(data.message);
                         addMessage(decrypted, 'received');
@@ -585,7 +1030,10 @@
             conn.on('close', () => {
                 console.log('❌ Conexión cerrada');
                 addSystemMessage('🔌 Conexión finalizada');
-                disconnect();
+                isConnected = false;
+                remotePublicKey = null;
+                statusIndicator.classList.remove('connected', 'encrypted');
+                chatStatus.textContent = 'Desconectado';
             });
 
             conn.on('error', (error) => {
@@ -604,16 +1052,13 @@
             }
 
             try {
-                // Cifrar el mensaje
                 const encrypted = await encryptMessage(remotePublicKey, message);
                 
-                // Enviar mensaje cifrado
                 conn.send({
                     type: 'encrypted-message',
                     message: encrypted
                 });
 
-                // Mostrar en la UI
                 addMessage(message, 'sent');
                 messageInput.value = '';
             } catch (error) {
@@ -622,40 +1067,25 @@
             }
         }
 
-        function disconnect() {
-            if (conn) {
-                conn.close();
-            }
-            isConnected = false;
-            remotePublicKey = null;
-            updateUI('disconnected');
-        }
-
-        // ==================== UI ====================
-
-        function updateUI(status) {
-            if (status === 'connected') {
-                statusIndicator.classList.add('connected');
-            } else if (status === 'encrypted') {
-                statusIndicator.classList.add('encrypted');
-                connectionSection.classList.add('hidden');
-                chatContainer.classList.remove('hidden');
-                disconnectBtn.classList.remove('hidden');
-                messageInput.focus();
-            } else if (status === 'disconnected') {
-                statusIndicator.classList.remove('connected', 'encrypted');
-                connectionSection.classList.remove('hidden');
-                chatContainer.classList.add('hidden');
-                disconnectBtn.classList.add('hidden');
-                messagesArea.innerHTML = '<div class="system-message">🔐 Conversación cifrada de extremo a extremo</div>';
-            }
-        }
+        // ==================== UI - MENSAJES ====================
 
         function addMessage(text, type) {
+            const timestamp = new Date().toISOString();
+            addMessageToUI(text, type, timestamp);
+            
+            if (currentChat) {
+                saveMessage(currentChat, text, type);
+            }
+        }
+
+        function addMessageToUI(text, type, timestamp) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
             
-            const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const time = new Date(timestamp).toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
             
             messageDiv.innerHTML = `
                 <div class="message-bubble">
@@ -686,9 +1116,6 @@
 
         function setupEventListeners() {
             connectBtn.addEventListener('click', connectToPeer);
-            
-            disconnectBtn.addEventListener('click', disconnect);
-            
             sendBtn.addEventListener('click', sendMessage);
             
             messageInput.addEventListener('keypress', (e) => {
@@ -696,9 +1123,46 @@
                     sendMessage();
                 }
             });
+
+            newChatBtn.addEventListener('click', () => {
+                connectionSection.classList.remove('hidden');
+                chatContainer.classList.add('hidden');
+                currentChat = null;
+                remotePeerIdInput.value = '';
+                contactNameInput.value = '';
+                messagesArea.innerHTML = '<div class="system-message">🔐 Conversación cifrada de extremo a extremo</div>';
+            });
+
+            closeChatBtn.addEventListener('click', () => {
+                if (conn && isConnected) {
+                    conn.close();
+                }
+                currentChat = null;
+                isConnected = false;
+                remotePublicKey = null;
+                chatContainer.classList.add('hidden');
+                connectionSection.classList.remove('hidden');
+                statusIndicator.classList.remove('connected', 'encrypted');
+            });
+
+            clearChatBtn.addEventListener('click', () => {
+                if (!currentChat) return;
+                
+                if (confirm('¿Eliminar todo el historial de esta conversación?')) {
+                    const chatId = getChatId(currentChat);
+                    delete chats[chatId];
+                    saveChatsToStorage();
+                    renderContactsList();
+                    messagesArea.innerHTML = '<div class="system-message">🔐 Historial eliminado</div>';
+                }
+            });
+
+            toggleSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+            });
         }
 
-        // Service Worker para PWA
+        // Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
