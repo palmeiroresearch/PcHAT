@@ -730,20 +730,29 @@
         }
 
         function saveMessage(peerId, message, type) {
-            if (chatMode === 'ephemeral') {
+            // Obtener el modo actual - usar el del chat existente si ya existe
+            const chatId = getChatId(peerId);
+            const existingChat = chats[chatId];
+            const currentMode = existingChat ? existingChat.mode : chatMode;
+            
+            if (currentMode === 'ephemeral') {
                 // No guardar en modo efímero
+                console.log('Modo efímero - mensaje no guardado');
                 return;
             }
 
-            const chatId = getChatId(peerId);
             if (!chats[chatId]) {
+                // Crear nuevo chat
+                const chatName = contactNameInput.value.trim() || peerId.substring(0, 8);
                 chats[chatId] = {
                     peerId: peerId,
-                    name: contactNameInput.value || peerId.substring(0, 8),
+                    name: chatName,
                     messages: [],
-                    mode: chatMode,
-                    lastUpdate: new Date().toISOString()
+                    mode: currentMode,
+                    lastUpdate: new Date().toISOString(),
+                    created: new Date().toISOString()
                 };
+                console.log('✅ Chat creado:', chatName, '- Modo:', currentMode);
             }
 
             chats[chatId].messages.push({
@@ -931,7 +940,25 @@
             });
 
             peer.on('connection', (incomingConn) => {
-                console.log('📞 Conexión entrante recibida');
+                console.log('📞 Conexión entrante recibida de:', incomingConn.peer);
+                
+                // Si ya hay una conexión activa, cerrarla
+                if (conn && isConnected) {
+                    console.log('⚠️ Ya hay una conexión activa, cerrando la anterior');
+                    conn.close();
+                }
+                
+                // Revisar si existe un chat previo con este peer
+                const existingChat = loadChatMessages(incomingConn.peer);
+                if (existingChat) {
+                    chatMode = existingChat.mode;
+                    console.log('📂 Chat existente encontrado, modo:', chatMode);
+                } else {
+                    // Por defecto usar persistente para conexiones entrantes
+                    chatMode = 'persistent';
+                    console.log('✨ Nuevo chat, modo por defecto: persistent');
+                }
+                
                 handleConnection(incomingConn);
             });
         }
@@ -949,8 +976,18 @@
                 return;
             }
 
+            // Guardar el modo de chat seleccionado
             chatMode = chatModeSelect.value;
-            addSystemMessage('🔄 Conectando...');
+            console.log('🔄 Conectando en modo:', chatMode);
+            
+            // Mostrar mensaje en área de chat
+            connectionSection.classList.add('hidden');
+            chatContainer.classList.remove('hidden');
+            messagesArea.innerHTML = '<div class="system-message">🔄 Conectando...</div>';
+            chatContactName.textContent = contactNameInput.value.trim() || remotePeerId.substring(0, 8);
+            chatStatus.textContent = 'Conectando...';
+            
+            // Iniciar conexión
             conn = peer.connect(remotePeerId, { reliable: true });
             handleConnection(conn);
         }
@@ -960,7 +997,7 @@
             currentChat = conn.peer;
 
             conn.on('open', async () => {
-                console.log('✅ Conexión P2P establecida');
+                console.log('✅ Conexión P2P establecida con:', conn.peer);
                 
                 const myPublicKey = await exportPublicKey();
                 conn.send({
@@ -983,31 +1020,51 @@
                         chatStatus.textContent = '🔐 Cifrado E2EE activo';
                         chatEncryptionBadge.classList.remove('hidden');
                         
-                        addSystemMessage('🔐 Cifrado E2EE establecido. Conversación segura.');
-                        
                         // Mostrar chat
                         connectionSection.classList.add('hidden');
                         chatContainer.classList.remove('hidden');
                         
-                        const name = contactNameInput.value || conn.peer.substring(0, 8);
+                        const name = contactNameInput.value.trim() || conn.peer.substring(0, 8);
                         chatContactName.textContent = name;
                         
                         if (chatMode === 'ephemeral') {
                             chatEphemeralBadge.classList.remove('hidden');
                         }
                         
-                        // Cargar historial si existe
+                        // Cargar historial si existe y es modo persistente
                         const existingChat = loadChatMessages(conn.peer);
-                        if (existingChat && chatMode === 'persistent') {
+                        if (existingChat && existingChat.mode === 'persistent') {
+                            console.log('📂 Cargando historial existente...');
                             existingChat.messages.forEach(msg => {
                                 if (msg.type !== 'system') {
                                     addMessageToUI(msg.text, msg.type, msg.timestamp);
                                 }
                             });
+                        } else if (!existingChat && chatMode === 'persistent') {
+                            // Crear el chat inmediatamente si es persistente
+                            const chatId = getChatId(conn.peer);
+                            chats[chatId] = {
+                                peerId: conn.peer,
+                                name: name,
+                                messages: [],
+                                mode: chatMode,
+                                lastUpdate: new Date().toISOString(),
+                                created: new Date().toISOString()
+                            };
+                            saveChatsToStorage();
+                            renderContactsList();
+                            console.log('✅ Chat persistente creado:', name);
                         }
-
+                        
+                        addSystemMessage('🔐 Cifrado E2EE establecido. Conversación segura.');
                         messageInput.focus();
                         
+                        // Si móvil, cerrar sidebar
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.add('collapsed');
+                        }
+                        
+                        // Solo enviar clave pública si fuimos nosotros quienes iniciamos
                         if (conn.peer === remotePeerIdInput.value.trim()) {
                             const myPublicKey = await exportPublicKey();
                             conn.send({
@@ -1125,12 +1182,28 @@
             });
 
             newChatBtn.addEventListener('click', () => {
+                // Cerrar conexión actual si existe
+                if (conn && isConnected) {
+                    conn.close();
+                }
+                
+                // Limpiar estado
                 connectionSection.classList.remove('hidden');
                 chatContainer.classList.add('hidden');
                 currentChat = null;
+                isConnected = false;
+                remotePublicKey = null;
+                chatMode = 'persistent'; // Reset a modo por defecto
+                
+                // Limpiar inputs
                 remotePeerIdInput.value = '';
                 contactNameInput.value = '';
-                messagesArea.innerHTML = '<div class="system-message">🔐 Conversación cifrada de extremo a extremo</div>';
+                chatModeSelect.value = 'persistent';
+                
+                // Limpiar indicadores
+                statusIndicator.classList.remove('connected', 'encrypted');
+                
+                console.log('✨ Preparando nueva conversación');
             });
 
             closeChatBtn.addEventListener('click', () => {
